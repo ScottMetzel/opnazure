@@ -14,7 +14,7 @@
 # Note: Firewall Sync should only be setup in the Primary Server
 
 # May 2024 Missing Directory Fix
-mkdir -p /usr/local/opnsense/service/conf/actions.d
+mkdir -p /usr/local/opnsense/service/conf/
 mkdir -p /usr/local/etc/rc.syshook.d/start
 
 if [ "$4" = "Primary" ]; then
