@@ -12,6 +12,11 @@
 
 # Check if Primary or Secondary Server to setup Firewal Sync
 # Note: Firewall Sync should only be setup in the Primary Server
+
+# May 2024 Missing Directory Fix
+mkdir -p /usr/local/opnsense/service/conf/actions.d
+mkdir -p /usr/local/etc/rc.syshook.d/start
+
 if [ "$4" = "Primary" ]; then
     fetch $1config-active-active-primary.xml
     fetch $1get_nic_gw.py
@@ -41,8 +46,8 @@ elif [ "$4" = "TwoNics" ]; then
 fi
 
 #OPNSense default configuration template
-#fetch https://raw.githubusercontent.com/dmauser/opnazure/dev_active_active/scripts/$1
-#fetch https://raw.githubusercontent.com/dmauser/opnazure/master/scripts/$1
+#fetch https://raw.githubusercontent.com/ScottMetzel/opnazure/dev_active_active/scripts/$1
+#fetch https://raw.githubusercontent.com/ScottMetzel/opnazure/master/scripts/$1
 #cp $1 /usr/local/etc/config.xml
 
 # 1. Package to get root certificate bundle from the Mozilla Project (FreeBSD)

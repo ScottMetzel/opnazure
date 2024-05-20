@@ -14,7 +14,7 @@
     "virtualNetworkName": {
       "value": "OPN-VNET"
     },
-    "existingvirtualNetwork" :{
+    "existingvirtualNetwork": {
       "value": "new"
     },
     "VNETAddress": {
@@ -38,12 +38,12 @@
       "value": "Standard"
     },
     "OpnScriptURI": {
-      "value": "https://raw.githubusercontent.com/dmauser/opnazure/master/scripts/"
+      "value": "https://raw.githubusercontent.com/ScottMetzel/opnazure/master/scripts/"
     },
     "ShellScriptName": {
       "value": "configureopnsense.sh"
     },
-    "DeployWindows" :{
+    "DeployWindows": {
       "value": false
     },
     "DeployWindowsSubnet": {

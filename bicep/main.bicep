@@ -43,7 +43,7 @@ param existingTrustedSubnetName string = ''
 param PublicIPAddressSku string = 'Standard'
 
 @sys.description('URI for Custom OPN Script and Config')
-param OpnScriptURI string = 'https://raw.githubusercontent.com/dmauser/opnazure/master/scripts/'
+param OpnScriptURI string = 'https://raw.githubusercontent.com/ScottMetzel/opnazure/master/scripts/'
 
 @sys.description('Shell Script to be executed')
 param ShellScriptName string = 'configureopnsense.sh'
@@ -74,7 +74,7 @@ param Location string = resourceGroup().location
 
 // Variables
 var TempUsername = 'azureuser'
-var TempPassword = guid(subscription().id,resourceGroup().id)
+var TempPassword = guid(subscription().id, resourceGroup().id)
 var untrustedSubnetName = 'Untrusted-Subnet'
 var trustedSubnetName = 'Trusted-Subnet'
 var VMOPNsensePrimaryName = '${virtualMachineName}-Primary'
@@ -141,45 +141,47 @@ module nsgopnsense 'modules/vnet/nsg.bicep' = {
 }
 
 // Create VNET
-module vnet 'modules/vnet/vnet.bicep' = if(useexistingvirtualNetwork == false) {
+module vnet 'modules/vnet/vnet.bicep' = if (useexistingvirtualNetwork == false) {
   name: virtualNetworkName
   params: {
     location: Location
     vnetAddressSpace: VNETAddress
     vnetName: virtualNetworkName
-    subnets: DeployWindows == true ? [
-      {
-        name: untrustedSubnetName
-        properties: {
-          addressPrefix: UntrustedSubnetCIDR
-        }
-      }
-      {
-        name: trustedSubnetName
-        properties: {
-          addressPrefix: TrustedSubnetCIDR
-        }
-      }
-      {
-        name: windowsvmsubnetname
-        properties: {
-          addressPrefix: DeployWindowsSubnet
-        }
-      }
-    ]:[
-      {
-        name: untrustedSubnetName
-        properties: {
-          addressPrefix: UntrustedSubnetCIDR
-        }
-      }
-      {
-        name: trustedSubnetName
-        properties: {
-          addressPrefix: TrustedSubnetCIDR
-        }
-      }
-    ]
+    subnets: DeployWindows == true
+      ? [
+          {
+            name: untrustedSubnetName
+            properties: {
+              addressPrefix: UntrustedSubnetCIDR
+            }
+          }
+          {
+            name: trustedSubnetName
+            properties: {
+              addressPrefix: TrustedSubnetCIDR
+            }
+          }
+          {
+            name: windowsvmsubnetname
+            properties: {
+              addressPrefix: DeployWindowsSubnet
+            }
+          }
+        ]
+      : [
+          {
+            name: untrustedSubnetName
+            properties: {
+              addressPrefix: UntrustedSubnetCIDR
+            }
+          }
+          {
+            name: trustedSubnetName
+            properties: {
+              addressPrefix: TrustedSubnetCIDR
+            }
+          }
+        ]
   }
 }
 
@@ -213,7 +215,7 @@ resource windowsvmsubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' 
 }
 
 // External Load Balancer
-module elb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
+module elb 'modules/vnet/lb.bicep' = if (scenarioOption == 'Active-Active') {
   name: externalLoadBalanceName
   params: {
     Location: Location
@@ -242,19 +244,35 @@ module elb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
           enableFloatingIP: true
           protocol: 'Tcp'
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', externalLoadBalanceName, externalLoadBalanceFIPConfName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+              externalLoadBalanceName,
+              externalLoadBalanceFIPConfName
+            )
           }
           disableOutboundSnat: true
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', externalLoadBalanceName, externalLoadBalanceBAPName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/backendAddressPools',
+              externalLoadBalanceName,
+              externalLoadBalanceBAPName
+            )
           }
           backendAddressPools: [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', externalLoadBalanceName, externalLoadBalanceBAPName)
+              id: resourceId(
+                'Microsoft.Network/loadBalancers/backendAddressPools',
+                externalLoadBalanceName,
+                externalLoadBalanceBAPName
+              )
             }
           ]
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', externalLoadBalanceName, externalLoadBalanceProbeName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/probes',
+              externalLoadBalanceName,
+              externalLoadBalanceProbeName
+            )
           }
         }
       }
@@ -267,7 +285,11 @@ module elb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
           backendPort: 443
           protocol: 'Tcp'
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', externalLoadBalanceName, externalLoadBalanceFIPConfName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+              externalLoadBalanceName,
+              externalLoadBalanceFIPConfName
+            )
           }
         }
       }
@@ -278,7 +300,11 @@ module elb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
           backendPort: 443
           protocol: 'Tcp'
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', externalLoadBalanceName, externalLoadBalanceFIPConfName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+              externalLoadBalanceName,
+              externalLoadBalanceFIPConfName
+            )
           }
         }
       }
@@ -302,11 +328,19 @@ module elb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
           idleTimeoutInMinutes: 4
           enableTcpReset: true
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', externalLoadBalanceName, externalLoadBalanceBAPName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/backendAddressPools',
+              externalLoadBalanceName,
+              externalLoadBalanceBAPName
+            )
           }
           frontendIPConfigurations: [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', externalLoadBalanceName, externalLoadBalanceFIPConfName)
+              id: resourceId(
+                'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+                externalLoadBalanceName,
+                externalLoadBalanceFIPConfName
+              )
             }
           ]
           protocol: 'All'
@@ -317,7 +351,7 @@ module elb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
 }
 
 // Internal Load Balancer
-module ilb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
+module ilb 'modules/vnet/lb.bicep' = if (scenarioOption == 'Active-Active') {
   name: internalLoadBalanceName
   params: {
     Location: Location
@@ -347,19 +381,35 @@ module ilb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
           backendPort: 0
           protocol: 'All'
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', internalLoadBalanceName, internalLoadBalanceFIPConfName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+              internalLoadBalanceName,
+              internalLoadBalanceFIPConfName
+            )
           }
           disableOutboundSnat: true
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', internalLoadBalanceName, internalLoadBalanceBAPName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/backendAddressPools',
+              internalLoadBalanceName,
+              internalLoadBalanceBAPName
+            )
           }
           backendAddressPools: [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', internalLoadBalanceName, internalLoadBalanceBAPName)
+              id: resourceId(
+                'Microsoft.Network/loadBalancers/backendAddressPools',
+                internalLoadBalanceName,
+                internalLoadBalanceBAPName
+              )
             }
           ]
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', internalLoadBalanceName, internalLoadBalanceProbeName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/probes',
+              internalLoadBalanceName,
+              internalLoadBalanceProbeName
+            )
           }
         }
       }
@@ -385,7 +435,7 @@ module ilb 'modules/vnet/lb.bicep' = if(scenarioOption == 'Active-Active'){
 
 // Create OPNSense Active-Active
 // Create OPNsense Secondary
-module opnSenseSecondary 'modules/VM/opnsense.bicep' = if(scenarioOption == 'Active-Active'){
+module opnSenseSecondary 'modules/VM/opnsense.bicep' = if (scenarioOption == 'Active-Active') {
   name: VMOPNsenseSecondaryName
   params: {
     Location: Location
@@ -396,7 +446,9 @@ module opnSenseSecondary 'modules/VM/opnsense.bicep' = if(scenarioOption == 'Act
       WALinuxVersion: WALinuxVersion
       OpnType: 'Secondary'
       TrustedSubnetName: '${virtualNetworkName}/${useexistingvirtualNetwork ? existingTrustedSubnetName : trustedSubnetName}'
-      WindowsSubnetName: DeployWindows ? '${virtualNetworkName}/${useexistingvirtualNetwork ? existingWindowsSubnet : windowsvmsubnetname}' : ''
+      WindowsSubnetName: DeployWindows
+        ? '${virtualNetworkName}/${useexistingvirtualNetwork ? existingWindowsSubnet : windowsvmsubnetname}'
+        : ''
       publicIPAddress: publicip.outputs.publicipAddress
       opnSenseSecondarytrustedNicIP: ''
     }
@@ -410,8 +462,12 @@ module opnSenseSecondary 'modules/VM/opnsense.bicep' = if(scenarioOption == 'Act
     virtualMachineName: VMOPNsenseSecondaryName
     virtualMachineSize: virtualMachineSize
     nsgId: nsgopnsense.outputs.nsgID
-    ExternalLoadBalancerBackendAddressPoolId: scenarioOption == 'Active-Active' ? elb.outputs.backendAddressPools[0].id : ''
-    InternalLoadBalancerBackendAddressPoolId: scenarioOption == 'Active-Active' ? ilb.outputs.backendAddressPools[0].id : ''
+    ExternalLoadBalancerBackendAddressPoolId: scenarioOption == 'Active-Active'
+      ? elb.outputs.backendAddressPools[0].id
+      : ''
+    InternalLoadBalancerBackendAddressPoolId: scenarioOption == 'Active-Active'
+      ? ilb.outputs.backendAddressPools[0].id
+      : ''
     ExternalloadBalancerInboundNatRulesId: scenarioOption == 'Active-Active' ? elb.outputs.inboundNatRules[1].id : ''
   }
   dependsOn: [
@@ -424,7 +480,7 @@ module opnSenseSecondary 'modules/VM/opnsense.bicep' = if(scenarioOption == 'Act
 }
 
 // Create OPNsense Primary
-module opnSensePrimary 'modules/VM/opnsense.bicep' = if(scenarioOption == 'Active-Active'){
+module opnSensePrimary 'modules/VM/opnsense.bicep' = if (scenarioOption == 'Active-Active') {
   name: VMOPNsensePrimaryName
   params: {
     Location: Location
@@ -435,7 +491,9 @@ module opnSensePrimary 'modules/VM/opnsense.bicep' = if(scenarioOption == 'Activ
       WALinuxVersion: WALinuxVersion
       OpnType: 'Primary'
       TrustedSubnetName: '${virtualNetworkName}/${useexistingvirtualNetwork ? existingTrustedSubnetName : trustedSubnetName}'
-      WindowsSubnetName: DeployWindows ? '${virtualNetworkName}/${useexistingvirtualNetwork ? existingWindowsSubnet : windowsvmsubnetname}' : ''
+      WindowsSubnetName: DeployWindows
+        ? '${virtualNetworkName}/${useexistingvirtualNetwork ? existingWindowsSubnet : windowsvmsubnetname}'
+        : ''
       publicIPAddress: publicip.outputs.publicipAddress
       opnSenseSecondarytrustedNicIP: scenarioOption == 'Active-Active' ? opnSenseSecondary.outputs.trustedNicIP : ''
     }
@@ -449,8 +507,12 @@ module opnSensePrimary 'modules/VM/opnsense.bicep' = if(scenarioOption == 'Activ
     virtualMachineName: VMOPNsensePrimaryName
     virtualMachineSize: virtualMachineSize
     nsgId: nsgopnsense.outputs.nsgID
-    ExternalLoadBalancerBackendAddressPoolId: scenarioOption == 'Active-Active' ? elb.outputs.backendAddressPools[0].id : ''
-    InternalLoadBalancerBackendAddressPoolId: scenarioOption == 'Active-Active' ? ilb.outputs.backendAddressPools[0].id : ''
+    ExternalLoadBalancerBackendAddressPoolId: scenarioOption == 'Active-Active'
+      ? elb.outputs.backendAddressPools[0].id
+      : ''
+    InternalLoadBalancerBackendAddressPoolId: scenarioOption == 'Active-Active'
+      ? ilb.outputs.backendAddressPools[0].id
+      : ''
     ExternalloadBalancerInboundNatRulesId: scenarioOption == 'Active-Active' ? elb.outputs.inboundNatRules[0].id : ''
   }
   dependsOn: [
@@ -461,7 +523,7 @@ module opnSensePrimary 'modules/VM/opnsense.bicep' = if(scenarioOption == 'Activ
 }
 
 // Create OPNsense TwoNics
-module opnSenseTwoNics 'modules/VM/opnsense.bicep' = if(scenarioOption == 'TwoNics'){
+module opnSenseTwoNics 'modules/VM/opnsense.bicep' = if (scenarioOption == 'TwoNics') {
   name: '${virtualMachineName}-TwoNics'
   params: {
     Location: Location
@@ -472,7 +534,9 @@ module opnSenseTwoNics 'modules/VM/opnsense.bicep' = if(scenarioOption == 'TwoNi
       WALinuxVersion: WALinuxVersion
       OpnType: 'TwoNics'
       TrustedSubnetName: '${virtualNetworkName}/${useexistingvirtualNetwork ? existingTrustedSubnetName : trustedSubnetName}'
-      WindowsSubnetName: DeployWindows ? '${virtualNetworkName}/${useexistingvirtualNetwork ? existingWindowsSubnet : windowsvmsubnetname}' : ''
+      WindowsSubnetName: DeployWindows
+        ? '${virtualNetworkName}/${useexistingvirtualNetwork ? existingWindowsSubnet : windowsvmsubnetname}'
+        : ''
       publicIPAddress: ''
       opnSenseSecondarytrustedNicIP: ''
     }
@@ -577,7 +641,9 @@ module winvmroutetableroutes 'modules/vnet/routetableroutes.bicep' = if (DeployW
     routeName: 'default'
     properties: {
       nextHopType: 'VirtualAppliance'
-      nextHopIpAddress: scenarioOption == 'Active-Active' ? ilb.outputs.frontendIP.privateIPAddress : scenarioOption == 'TwoNics' ? opnSenseTwoNics.outputs.trustedNicIP : ''
+      nextHopIpAddress: scenarioOption == 'Active-Active'
+        ? ilb.outputs.frontendIP.privateIPAddress
+        : scenarioOption == 'TwoNics' ? opnSenseTwoNics.outputs.trustedNicIP : ''
       addressPrefix: '0.0.0.0/0'
     }
   }
